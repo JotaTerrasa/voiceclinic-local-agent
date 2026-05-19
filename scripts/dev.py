@@ -18,6 +18,8 @@ def main() -> None:
     subparsers.add_parser("copy-env")
     subparsers.add_parser("setup")
     subparsers.add_parser("setup-voice")
+    subparsers.add_parser("setup-orchestration")
+    subparsers.add_parser("setup-all")
     subparsers.add_parser("init-db")
     subparsers.add_parser("reset-db")
     subparsers.add_parser("chat")
@@ -39,6 +41,10 @@ def main() -> None:
         setup()
     elif args.command == "setup-voice":
         setup_voice()
+    elif args.command == "setup-orchestration":
+        setup_orchestration()
+    elif args.command == "setup-all":
+        setup_all()
     elif args.command == "init-db":
         run_voiceclinic("init-db")
     elif args.command == "reset-db":
@@ -79,6 +85,16 @@ def setup() -> None:
 def setup_voice() -> None:
     ensure_venv()
     run(venv_python(), "-m", "pip", "install", "-e", ".[dev,voice]")
+
+
+def setup_orchestration() -> None:
+    ensure_venv()
+    run(venv_python(), "-m", "pip", "install", "-e", ".[dev,orchestration]")
+
+
+def setup_all() -> None:
+    ensure_venv()
+    run(venv_python(), "-m", "pip", "install", "-e", ".[dev,voice,orchestration,livekit]")
 
 
 def run_voiceclinic(*args: str) -> None:

@@ -20,11 +20,13 @@ flowchart LR
   AudioSocket --> STT["faster-whisper"]
   STT --> Agent
 
+  Agent --> Orchestrator["Direct flow<br/>or LangGraph"]
+  Orchestrator --> Agent
   Agent --> Observer["ClinicalPolicyObserver"]
   Observer --> Agent
   Agent --> Scheduler["Scheduler"]
   Scheduler --> DB[("SQLite")]
-  Agent --> Ollama["Ollama / qwen3:30b"]
+  Agent --> LLM["LLM provider<br/>Ollama or OpenAI"]
   Agent --> TTS["Piper"]
 
   TTS --> API
@@ -62,6 +64,8 @@ sequenceDiagram
 
 - `voiceclinic.api`: FastAPI app, web demo mount, chat endpoint, voice-turn endpoint.
 - `voiceclinic.agent`: conversation logic, intent extraction and tool execution.
+- `voiceclinic.orchestration`: optional LangGraph graph for the turn lifecycle.
+- `voiceclinic.llm`: OpenAI-compatible provider abstraction for Ollama and OpenAI.
 - `voiceclinic.guardrails`: independent clinical policy observer.
 - `voiceclinic.scheduling`: transactional appointment operations.
 - `voiceclinic.db`: SQLite schema and demo seed data.
@@ -117,6 +121,10 @@ erDiagram
 - **Rules before LLM for critical behavior.** Appointment operations are
   deterministic and covered by tests. Ollama improves language understanding but
   does not own the transaction.
+- **Provider abstraction for LLMs.** The same agent can use local Ollama or the
+  OpenAI provider through configuration.
+- **Optional LangGraph orchestration.** The default direct flow is lightweight;
+  LangGraph can be enabled to demonstrate explicit stateful orchestration.
 - **Guardrails are a separate observer.** The clinical observer can block or
   annotate a turn before scheduling tools run.
 - **SQLite for portfolio speed.** SQLite keeps the demo easy to run; the
@@ -154,11 +162,13 @@ flowchart LR
   AudioSocket --> STT["faster-whisper"]
   STT --> Agent
 
+  Agent --> Orchestrator["Flujo directo<br/>o LangGraph"]
+  Orchestrator --> Agent
   Agent --> Observer["ClinicalPolicyObserver"]
   Observer --> Agent
   Agent --> Scheduler["Scheduler"]
   Scheduler --> DB[("SQLite")]
-  Agent --> Ollama["Ollama / qwen3:30b"]
+  Agent --> LLM["Provider LLM<br/>Ollama u OpenAI"]
   Agent --> TTS["Piper"]
 
   TTS --> API
@@ -196,6 +206,8 @@ sequenceDiagram
 
 - `voiceclinic.api`: aplicación FastAPI, demo web, endpoint de chat y endpoint de voz.
 - `voiceclinic.agent`: lógica conversacional, extracción de intención y ejecución de herramientas.
+- `voiceclinic.orchestration`: grafo opcional LangGraph para el ciclo de turno.
+- `voiceclinic.llm`: abstracción compatible con OpenAI para Ollama y OpenAI.
 - `voiceclinic.guardrails`: observador clínico de políticas.
 - `voiceclinic.scheduling`: operaciones transaccionales de agenda.
 - `voiceclinic.db`: esquema SQLite y datos de demostración.
@@ -251,6 +263,10 @@ erDiagram
 - **Reglas antes que LLM para comportamiento crítico.** Las operaciones de agenda
   son deterministas y están cubiertas por tests. Ollama mejora la comprensión
   del lenguaje, pero no controla la transacción.
+- **Abstracción de providers LLM.** El mismo agente puede usar Ollama local u
+  OpenAI mediante configuración.
+- **Orquestación opcional con LangGraph.** El flujo directo por defecto es ligero;
+  LangGraph puede activarse para demostrar orquestación explícita con estado.
 - **Guardrails como observador separado.** El observador clínico puede bloquear o
   anotar un turno antes de ejecutar herramientas de agenda.
 - **SQLite para velocidad de portfolio.** SQLite facilita ejecutar la demo; la

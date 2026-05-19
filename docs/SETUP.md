@@ -84,6 +84,42 @@ OLLAMA_TIMEOUT_SECONDS=20
 
 The agent still works without Ollama by falling back to deterministic rules.
 
+### OpenAI provider
+
+To use OpenAI instead of Ollama, configure `.env`:
+
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your-api-key
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+The code uses an OpenAI-compatible chat-completions provider, so the agent can
+switch between local Ollama and OpenAI without changing the scheduling logic.
+
+### LangGraph orchestration
+
+Direct orchestration is the default because it has no optional dependencies:
+
+```env
+ORCHESTRATION_MODE=direct
+```
+
+To run the optional LangGraph turn lifecycle:
+
+```bash
+python scripts/dev.py setup-orchestration
+```
+
+Then set:
+
+```env
+ORCHESTRATION_MODE=langgraph
+```
+
+The graph currently models the turn as `observe_policy -> infer_intent ->
+execute_action`, with a blocking branch when a clinical guardrail fires.
+
 ### Voice dependencies
 
 Install the Python voice dependency:
@@ -245,6 +281,44 @@ OLLAMA_TIMEOUT_SECONDS=20
 ```
 
 El agente sigue funcionando sin Ollama gracias a reglas deterministas.
+
+### Provider OpenAI
+
+Para usar OpenAI en lugar de Ollama, configura `.env`:
+
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your-api-key
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+El código usa un provider compatible con chat completions de OpenAI, por lo que
+el agente puede cambiar entre Ollama local y OpenAI sin modificar la lógica de
+agenda.
+
+### Orquestación con LangGraph
+
+La orquestación directa es la opción por defecto porque no requiere dependencias
+opcionales:
+
+```env
+ORCHESTRATION_MODE=direct
+```
+
+Para ejecutar el ciclo de turno con LangGraph:
+
+```bash
+python scripts/dev.py setup-orchestration
+```
+
+Después configura:
+
+```env
+ORCHESTRATION_MODE=langgraph
+```
+
+El grafo actual modela el turno como `observe_policy -> infer_intent ->
+execute_action`, con una rama bloqueante cuando se activa un guardrail clínico.
 
 ### Dependencias de voz
 

@@ -1,0 +1,95 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  pythonVersion: "3.12"
+  imageRepository: "voiceclinic-agent-api"
+  dockerfilePath: "Dockerfile"
+  tag: "$(Build.SourceVersion)"
+
+  # Configure these in Azure DevOps variable groups or pipeline variables.
+  azureServiceConnection: ""
+  acrName: ""
+  resourceGroup: ""
+  containerAppName: ""
+
+stages:
+  - stage: Validate
+    displayName: Validate
+    jobs:
+      - job: Python
+        displayName: Python tests and lint
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "$(pythonVersion)"
+
+          - script: |
+              python scripts/dev.py setup
+              python scripts/dev.py test
+              python scripts/dev.py lint
+            displayName: Install, test and lint
+
+          - script: |
+              docker compose config
+              docker compose -f docker-compose.yml -f docker-compose.gpu.yml config
+            displayName: Validate Docker Compose files
+
+  - stage: Build
+    displayName: Build and push image
+    dependsOn: Validate
+    condition: and(succeeded(), ne(variables['acrName'], ''), ne(variables['azureServiceConnection'], ''))
+    jobs:
+      - job: BuildImage
+        displayName: Build Docker image and push to ACR
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: "$(azureServiceConnection)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                az acr login --name "$(acrName)"
+                IMAGE="$(acrName).azurecr.io/$(imageRepository):$(tag)"
+                docker build -f "$(dockerfilePath)" -t "$IMAGE" .
+                docker push "$IMAGE"
+                echo "##vso[task.setvariable variable=imageName;isOutput=true]$IMAGE"
+
+  - stage: Deploy
+    displayName: Deploy to Azure Container Apps
+    dependsOn: Build
+    condition: and(succeeded(), ne(variables['containerAppName'], ''), ne(variables['resourceGroup'], ''))
+    jobs:
+      - deployment: DeployContainerApp
+        displayName: Update Container App revision
+        environment: voiceclinic
+        pool:
+          vmImage: ubuntu-latest
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: "$(azureServiceConnection)"
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      IMAGE="$(acrName).azurecr.io/$(imageRepository):$(tag)"
+                      az containerapp update \
+                        --name "$(containerAppName)" \
+                        --resource-group "$(resourceGroup)" \
+                        --image "$IMAGE"

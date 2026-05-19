@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: copy-env setup setup-voice init-db reset-db api chat audiosocket test lint docker-up docker-down
+.PHONY: copy-env setup setup-voice setup-orchestration setup-all init-db reset-db api chat audiosocket test lint docker-up docker-down
 
 copy-env:
 	$(PYTHON) scripts/dev.py copy-env
@@ -10,6 +10,12 @@ setup:
 
 setup-voice:
 	$(PYTHON) scripts/dev.py setup-voice
+
+setup-orchestration:
+	$(PYTHON) scripts/dev.py setup-orchestration
+
+setup-all:
+	$(PYTHON) scripts/dev.py setup-all
 
 init-db:
 	$(PYTHON) scripts/dev.py init-db

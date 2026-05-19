@@ -41,7 +41,8 @@ Main components:
 
 - **FastAPI** for the backend and web demo.
 - **SQLite** for demo patients, doctors, slots and appointments.
-- **Ollama** with `qwen3:30b` as the recommended local LLM for a single RTX 4090.
+- **Ollama or OpenAI** through a provider abstraction.
+- **LangGraph** as an optional orchestration layer.
 - **faster-whisper** for optional local speech-to-text.
 - **Piper** for optional local text-to-speech.
 - **Asterisk + AudioSocket** for local SIP calls from a softphone.
@@ -88,6 +89,8 @@ ollama pull qwen3:30b
 - [Setup](docs/SETUP.md): local, voice, Docker and telephony setup.
 - [Platform Notes](docs/PLATFORM_NOTES.md): Windows, macOS, Linux and CUDA notes.
 - [Architecture](docs/ARCHITECTURE.md): components, flows and design decisions.
+- [Azure Architecture](docs/AZURE_ARCHITECTURE.md): Azure Container Apps, Functions and DevOps target.
+- [Microservices](docs/MICROSERVICES.md): service boundaries and migration path.
 - [API](docs/API.md): REST endpoints and example requests.
 - [Guardrails](docs/GUARDRAILS.md): clinical observer pattern and policy categories.
 - [Demo Script](docs/DEMO_SCRIPT.md): portfolio-ready demo flow.
@@ -145,7 +148,8 @@ Componentes principales:
 
 - **FastAPI** para backend y demo web.
 - **SQLite** para pacientes, doctores, huecos y citas de demostración.
-- **Ollama** con `qwen3:30b` como LLM local recomendado para una RTX 4090.
+- **Ollama u OpenAI** mediante una abstracción de provider.
+- **LangGraph** como capa opcional de orquestación.
 - **faster-whisper** para transcripción local opcional.
 - **Piper** para síntesis de voz local opcional.
 - **Asterisk + AudioSocket** para llamadas SIP locales desde un softphone.
@@ -192,6 +196,8 @@ ollama pull qwen3:30b
 - [Instalación](docs/SETUP.md): configuración local, voz, Docker y telefonía.
 - [Notas de plataforma](docs/PLATFORM_NOTES.md): Windows, macOS, Linux y CUDA.
 - [Arquitectura](docs/ARCHITECTURE.md): componentes, flujos y decisiones técnicas.
+- [Arquitectura Azure](docs/AZURE_ARCHITECTURE.md): objetivo con Azure Container Apps, Functions y DevOps.
+- [Microservicios](docs/MICROSERVICES.md): límites de servicio y camino de migración.
 - [API](docs/API.md): endpoints REST y ejemplos de petición.
 - [Guardrails](docs/GUARDRAILS.md): patrón de observador clínico y categorías de política.
 - [Guion de Demo](docs/DEMO_SCRIPT.md): recorrido listo para portfolio.

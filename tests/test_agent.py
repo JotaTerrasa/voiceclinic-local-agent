@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from datetime import date
+from pathlib import Path
 
 from voiceclinic.agent import ClinicAgent, parse_datetime_hint
+from voiceclinic.config import Settings
 from voiceclinic.db import reset_db
 
 
@@ -75,3 +78,44 @@ def test_agent_does_not_answer_diagnosis_requests(tmp_path):
 
     assert reply.action == "guardrail_diagnosis_request"
     assert "No puedo darte un diagnostico" in reply.text
+
+
+def test_agent_langgraph_mode_falls_back_or_runs_when_optional_extra_is_available(tmp_path):
+    db_path = tmp_path / "clinic.db"
+    reset_db(db_path, start_date=date(2026, 5, 19))
+    settings = _settings(db_path=db_path, orchestration_mode="langgraph", llm_provider="none")
+    agent = ClinicAgent(db_path, settings=settings, today=date(2026, 5, 19))
+
+    reply = asyncio.run(
+        agent.handle_text(
+            "Quiero pedir una cita de medicina general manana a las 9",
+            patient_phone="+34600111222",
+            session_id="langgraph-call",
+        )
+    )
+
+    assert reply.action == "booked"
+    assert reply.data["specialty"] == "medicina general"
+
+
+def _settings(**overrides) -> Settings:
+    base = Settings(
+        db_path=Path("data/clinic.db"),
+        llm_provider="none",
+        orchestration_mode="direct",
+        ollama_base_url="http://localhost:11434/v1",
+        ollama_model="qwen3:30b",
+        ollama_timeout_seconds=20,
+        openai_base_url="https://api.openai.com/v1",
+        openai_api_key=None,
+        openai_model="gpt-4.1-mini",
+        openai_timeout_seconds=20,
+        whisper_model="small",
+        piper_bin="piper",
+        piper_model=None,
+        piper_config=None,
+        ffmpeg_bin="ffmpeg",
+        audiosocket_host="0.0.0.0",
+        audiosocket_port=9092,
+    )
+    return replace(base, **overrides)

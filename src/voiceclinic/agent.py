@@ -7,7 +7,7 @@ from pathlib import Path
 
 from voiceclinic.config import Settings
 from voiceclinic.guardrails import ClinicalPolicyObserver, PolicyEvaluation
-from voiceclinic.llm import OllamaClient
+from voiceclinic.llm import build_llm_client
 from voiceclinic.scheduling import Scheduler, SchedulingError, format_appointment
 from voiceclinic.text import contains_any, normalize_text
 
@@ -59,15 +59,7 @@ class ClinicAgent:
         self.settings = settings
         self.policy_observer = policy_observer or ClinicalPolicyObserver()
         self.today = today
-        self.llm = (
-            OllamaClient(
-                base_url=settings.ollama_base_url,
-                model=settings.ollama_model,
-                timeout_seconds=settings.ollama_timeout_seconds,
-            )
-            if settings
-            else None
-        )
+        self.llm = build_llm_client(settings)
 
     async def handle_text(
         self,
@@ -75,16 +67,60 @@ class ClinicAgent:
         patient_phone: str = "+34600111222",
         session_id: str | None = None,
     ) -> AgentReply:
-        policy = self.policy_observer.observe_user_turn(message, session_id=session_id)
+        if self.settings and self.settings.orchestration_mode == "langgraph":
+            try:
+                from voiceclinic.orchestration import LangGraphClinicOrchestrator
+
+                return await LangGraphClinicOrchestrator(self).run(
+                    message=message,
+                    patient_phone=patient_phone,
+                    session_id=session_id,
+                )
+            except ImportError:
+                pass
+
+        return await self._handle_text_direct(
+            message=message,
+            patient_phone=patient_phone,
+            session_id=session_id,
+        )
+
+    async def _handle_text_direct(
+        self,
+        message: str,
+        patient_phone: str,
+        session_id: str | None,
+    ) -> AgentReply:
+        policy = self._observe_policy(message, session_id)
         if policy.should_interrupt and policy.primary:
-            return AgentReply(
-                text=policy.primary.response_text,
-                action=f"guardrail_{policy.primary.key}",
-                data={"guardrails": policy.to_dict()},
-            )
+            return self._guardrail_reply(policy)
 
         intent = await self._infer_intent(message)
+        return await self._execute_intent(intent, policy, patient_phone, message)
 
+    def _observe_policy(self, message: str, session_id: str | None) -> PolicyEvaluation:
+        return self.policy_observer.observe_user_turn(message, session_id=session_id)
+
+    def _guardrail_reply(self, policy: PolicyEvaluation) -> AgentReply:
+        if not policy.primary:
+            return AgentReply(
+                text="No puedo continuar con esta solicitud.",
+                action="guardrail",
+                data={},
+            )
+        return AgentReply(
+            text=policy.primary.response_text,
+            action=f"guardrail_{policy.primary.key}",
+            data={"guardrails": policy.to_dict()},
+        )
+
+    async def _execute_intent(
+        self,
+        intent: Intent,
+        policy: PolicyEvaluation,
+        patient_phone: str,
+        message: str,
+    ) -> AgentReply:
         try:
             if intent.name == "book":
                 specialty = intent.specialty or "medicina general"

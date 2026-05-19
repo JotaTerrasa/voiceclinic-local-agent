@@ -20,6 +20,9 @@ voice = [
 livekit = [
   "livekit-agents[openai,silero]~=1.4",
 ]
+orchestration = [
+  "langgraph>=0.2.0",
+]
 dev = [
   "pytest>=8.3.0",
   "ruff>=0.6.0",

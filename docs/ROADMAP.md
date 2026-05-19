@@ -7,6 +7,8 @@
 - Local scheduling domain with demo patients, doctors, slots and appointments.
 - FastAPI backend and browser-based demo.
 - Deterministic intent handling with optional Ollama-based extraction.
+- Dual LLM provider for Ollama and OpenAI-compatible chat completions.
+- Optional LangGraph orchestration for the turn lifecycle.
 - `qwen3:30b` as the recommended local LLM for a single RTX 4090.
 - Clinical guardrail observer for emergencies, self-harm, diagnosis requests,
   prescription requests and third-party data.
@@ -14,6 +16,7 @@
 - Optional local TTS with Piper.
 - Initial Asterisk AudioSocket bridge for local SIP calls.
 - Bilingual documentation in English and Spanish.
+- Azure target architecture, microservice boundaries and Azure DevOps pipeline template.
 
 ### Portfolio V1
 
@@ -42,6 +45,8 @@
 - Dominio local de agenda con pacientes, doctores, huecos y citas de demostración.
 - Backend FastAPI y demo en navegador.
 - Manejo determinista de intención con extracción opcional mediante Ollama.
+- Provider LLM dual para Ollama y chat completions compatibles con OpenAI.
+- Orquestación opcional con LangGraph para el ciclo de turno.
 - `qwen3:30b` como LLM local recomendado para una RTX 4090.
 - Observador de guardrails clínicos para emergencias, autolesión, diagnóstico,
   recetas y datos de terceros.
@@ -49,6 +54,7 @@
 - TTS local opcional con Piper.
 - Puente inicial de Asterisk AudioSocket para llamadas SIP locales.
 - Documentación bilingüe en inglés y español.
+- Arquitectura objetivo en Azure, límites de microservicios y plantilla de Azure DevOps.
 
 ### V1 de portfolio
 
