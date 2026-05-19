@@ -42,11 +42,13 @@ Main components:
 - **FastAPI** for the backend and web demo.
 - **SQLite** for demo patients, doctors, slots and appointments.
 - **Ollama or OpenAI** through a provider abstraction.
-- **LangGraph** as an optional orchestration layer.
+- **LangGraph** as an optional orchestration layer compatible with LiveKit's
+  LangChain adapter.
 - **faster-whisper** for optional local speech-to-text.
 - **Piper** for optional local text-to-speech.
 - **Asterisk + AudioSocket** for local SIP calls from a softphone.
-- **LiveKit-ready design** for a future WebRTC/SIP path.
+- **LiveKit-ready design** with a message-based LangGraph graph for a future
+  WebRTC/SIP path.
 
 ### Quick start
 
@@ -91,6 +93,7 @@ ollama pull qwen3:30b
 - [Architecture](docs/ARCHITECTURE.md): components, flows and design decisions.
 - [Azure Architecture](docs/AZURE_ARCHITECTURE.md): Azure Container Apps, Functions and DevOps target.
 - [Microservices](docs/MICROSERVICES.md): service boundaries and migration path.
+- [LiveKit + LangGraph](docs/LIVEKIT_LANGGRAPH.md): message-based graph and LLMAdapter integration.
 - [API](docs/API.md): REST endpoints and example requests.
 - [Guardrails](docs/GUARDRAILS.md): clinical observer pattern and policy categories.
 - [Demo Script](docs/DEMO_SCRIPT.md): portfolio-ready demo flow.
@@ -111,6 +114,8 @@ clinical guardrails.
 - LiveKit local server: https://docs.livekit.io/transport/self-hosting/local/
 - LiveKit SIP self-hosted: https://docs.livekit.io/transport/self-hosting/sip-server/
 - LiveKit observer-pattern guardrails: https://livekit.com/blog/observer-pattern-voice-agent-guardrails
+- LiveKit LangChain adapter: https://livekit.com/blog/langchain-to-livekit
+- LiveKit LangChain integration guide: https://docs.livekit.io/agents/models/llm/langchain/
 - Asterisk AudioSocket: https://docs.asterisk.org/Configuration/Channel-Drivers/AudioSocket/
 - faster-whisper: https://github.com/SYSTRAN/faster-whisper
 - Piper: https://github.com/OHF-Voice/piper1-gpl
@@ -149,11 +154,13 @@ Componentes principales:
 - **FastAPI** para backend y demo web.
 - **SQLite** para pacientes, doctores, huecos y citas de demostración.
 - **Ollama u OpenAI** mediante una abstracción de provider.
-- **LangGraph** como capa opcional de orquestación.
+- **LangGraph** como capa opcional de orquestación compatible con el adaptador
+  LangChain de LiveKit.
 - **faster-whisper** para transcripción local opcional.
 - **Piper** para síntesis de voz local opcional.
 - **Asterisk + AudioSocket** para llamadas SIP locales desde un softphone.
-- **Diseño preparado para LiveKit** como evolución futura hacia WebRTC/SIP.
+- **Diseño preparado para LiveKit** con un grafo LangGraph basado en mensajes
+  como evolución futura hacia WebRTC/SIP.
 
 ### Inicio rápido
 
@@ -198,6 +205,7 @@ ollama pull qwen3:30b
 - [Arquitectura](docs/ARCHITECTURE.md): componentes, flujos y decisiones técnicas.
 - [Arquitectura Azure](docs/AZURE_ARCHITECTURE.md): objetivo con Azure Container Apps, Functions y DevOps.
 - [Microservicios](docs/MICROSERVICES.md): límites de servicio y camino de migración.
+- [LiveKit + LangGraph](docs/LIVEKIT_LANGGRAPH.md): grafo basado en mensajes e integración con LLMAdapter.
 - [API](docs/API.md): endpoints REST y ejemplos de petición.
 - [Guardrails](docs/GUARDRAILS.md): patrón de observador clínico y categorías de política.
 - [Guion de Demo](docs/DEMO_SCRIPT.md): recorrido listo para portfolio.
@@ -218,6 +226,8 @@ agente y guardrails clínicos.
 - LiveKit local server: https://docs.livekit.io/transport/self-hosting/local/
 - LiveKit SIP self-hosted: https://docs.livekit.io/transport/self-hosting/sip-server/
 - LiveKit observer-pattern guardrails: https://livekit.com/blog/observer-pattern-voice-agent-guardrails
+- LiveKit LangChain adapter: https://livekit.com/blog/langchain-to-livekit
+- LiveKit LangChain integration guide: https://docs.livekit.io/agents/models/llm/langchain/
 - Asterisk AudioSocket: https://docs.asterisk.org/Configuration/Channel-Drivers/AudioSocket/
 - faster-whisper: https://github.com/SYSTRAN/faster-whisper
 - Piper: https://github.com/OHF-Voice/piper1-gpl

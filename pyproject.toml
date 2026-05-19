@@ -18,7 +18,8 @@ voice = [
   "faster-whisper>=1.1.0",
 ]
 livekit = [
-  "livekit-agents[openai,silero]~=1.4",
+  "livekit-agents[langchain,silero]~=1.5",
+  "langgraph>=0.2.0",
 ]
 orchestration = [
   "langgraph>=0.2.0",

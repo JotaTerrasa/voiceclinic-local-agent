@@ -13,14 +13,16 @@ stack easier to evolve.
 flowchart LR
   Web["Web demo"] --> API["FastAPI"]
   REST["REST client"] --> API
+  LiveKit["LiveKit session"] --> Adapter["LangChain LLMAdapter"]
   Phone["SIP softphone"] --> Asterisk["Asterisk"]
   Asterisk --> AudioSocket["AudioSocket bridge"]
 
   API --> Agent["ClinicAgent"]
+  Adapter --> Orchestrator
   AudioSocket --> STT["faster-whisper"]
   STT --> Agent
 
-  Agent --> Orchestrator["Direct flow<br/>or LangGraph"]
+  Agent --> Orchestrator["Direct flow<br/>or message-based LangGraph"]
   Orchestrator --> Agent
   Agent --> Observer["ClinicalPolicyObserver"]
   Observer --> Agent
@@ -64,14 +66,16 @@ sequenceDiagram
 
 - `voiceclinic.api`: FastAPI app, web demo mount, chat endpoint, voice-turn endpoint.
 - `voiceclinic.agent`: conversation logic, intent extraction and tool execution.
-- `voiceclinic.orchestration`: optional LangGraph graph for the turn lifecycle.
+- `voiceclinic.orchestration`: optional message-based LangGraph graph for the
+  turn lifecycle and LiveKit's LangChain adapter.
 - `voiceclinic.llm`: OpenAI-compatible provider abstraction for Ollama and OpenAI.
 - `voiceclinic.guardrails`: independent clinical policy observer.
 - `voiceclinic.scheduling`: transactional appointment operations.
 - `voiceclinic.db`: SQLite schema and demo seed data.
 - `voiceclinic.voice`: local STT/TTS adapters.
 - `voiceclinic.telephony`: Asterisk AudioSocket bridge.
-- `voiceclinic.livekit_agent`: placeholder for future LiveKit Agents integration.
+- `voiceclinic.livekit_agent`: LiveKit adapter helper around the compiled
+  LangGraph graph.
 
 ### Data model
 
@@ -124,7 +128,9 @@ erDiagram
 - **Provider abstraction for LLMs.** The same agent can use local Ollama or the
   OpenAI provider through configuration.
 - **Optional LangGraph orchestration.** The default direct flow is lightweight;
-  LangGraph can be enabled to demonstrate explicit stateful orchestration.
+  LangGraph can be enabled to demonstrate explicit stateful orchestration. The
+  graph uses a `messages` state key so LiveKit can wrap it with
+  `langchain.LLMAdapter`.
 - **Guardrails are a separate observer.** The clinical observer can block or
   annotate a turn before scheduling tools run.
 - **SQLite for portfolio speed.** SQLite keeps the demo easy to run; the
@@ -155,14 +161,16 @@ probar y permite evolucionar el stack de voz sin reescribir la lógica clínica.
 flowchart LR
   Web["Demo web"] --> API["FastAPI"]
   REST["Cliente REST"] --> API
+  LiveKit["Sesión LiveKit"] --> Adapter["LangChain LLMAdapter"]
   Phone["Softphone SIP"] --> Asterisk["Asterisk"]
   Asterisk --> AudioSocket["Puente AudioSocket"]
 
   API --> Agent["ClinicAgent"]
+  Adapter --> Orchestrator
   AudioSocket --> STT["faster-whisper"]
   STT --> Agent
 
-  Agent --> Orchestrator["Flujo directo<br/>o LangGraph"]
+  Agent --> Orchestrator["Flujo directo<br/>o LangGraph basado en mensajes"]
   Orchestrator --> Agent
   Agent --> Observer["ClinicalPolicyObserver"]
   Observer --> Agent
@@ -206,14 +214,16 @@ sequenceDiagram
 
 - `voiceclinic.api`: aplicación FastAPI, demo web, endpoint de chat y endpoint de voz.
 - `voiceclinic.agent`: lógica conversacional, extracción de intención y ejecución de herramientas.
-- `voiceclinic.orchestration`: grafo opcional LangGraph para el ciclo de turno.
+- `voiceclinic.orchestration`: grafo opcional LangGraph basado en mensajes para
+  el ciclo de turno y el adaptador LangChain de LiveKit.
 - `voiceclinic.llm`: abstracción compatible con OpenAI para Ollama y OpenAI.
 - `voiceclinic.guardrails`: observador clínico de políticas.
 - `voiceclinic.scheduling`: operaciones transaccionales de agenda.
 - `voiceclinic.db`: esquema SQLite y datos de demostración.
 - `voiceclinic.voice`: adaptadores locales de STT/TTS.
 - `voiceclinic.telephony`: puente AudioSocket para Asterisk.
-- `voiceclinic.livekit_agent`: punto de extensión para LiveKit Agents.
+- `voiceclinic.livekit_agent`: helper de LiveKit alrededor del grafo LangGraph
+  compilado.
 
 ### Modelo de datos
 
@@ -266,7 +276,9 @@ erDiagram
 - **Abstracción de providers LLM.** El mismo agente puede usar Ollama local u
   OpenAI mediante configuración.
 - **Orquestación opcional con LangGraph.** El flujo directo por defecto es ligero;
-  LangGraph puede activarse para demostrar orquestación explícita con estado.
+  LangGraph puede activarse para demostrar orquestación explícita con estado. El
+  grafo usa la clave `messages` para que LiveKit pueda envolverlo con
+  `langchain.LLMAdapter`.
 - **Guardrails como observador separado.** El observador clínico puede bloquear o
   anotar un turno antes de ejecutar herramientas de agenda.
 - **SQLite para velocidad de portfolio.** SQLite facilita ejecutar la demo; la

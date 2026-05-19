@@ -118,7 +118,38 @@ ORCHESTRATION_MODE=langgraph
 ```
 
 The graph currently models the turn as `observe_policy -> infer_intent ->
-execute_action`, with a blocking branch when a clinical guardrail fires.
+execute_action`, with a blocking branch when a clinical guardrail fires. It uses
+a `messages` state key so the compiled graph can also be wrapped by LiveKit's
+LangChain adapter.
+
+### LiveKit + LangGraph adapter
+
+Install the optional LiveKit integration:
+
+```bash
+python scripts/dev.py setup-livekit
+```
+
+This installs `livekit-agents[langchain]` and LangGraph. Use
+`voiceclinic.orchestration.build_livekit_graph(agent)` when you want the
+compiled graph, or `voiceclinic.livekit_agent.build_langgraph_llm_adapter()`
+when you want a ready-to-pass LiveKit `LLMAdapter`.
+
+The pattern is:
+
+```python
+from livekit.agents import AgentSession
+
+from voiceclinic.livekit_agent import build_langgraph_llm_adapter
+
+session = AgentSession(
+    llm=build_langgraph_llm_adapter(),
+    # stt=..., tts=..., vad=...
+)
+```
+
+See [LiveKit + LangGraph](LIVEKIT_LANGGRAPH.md) for the complete bilingual
+integration notes.
 
 ### Voice dependencies
 
@@ -319,6 +350,37 @@ ORCHESTRATION_MODE=langgraph
 
 El grafo actual modela el turno como `observe_policy -> infer_intent ->
 execute_action`, con una rama bloqueante cuando se activa un guardrail clínico.
+Usa una clave de estado `messages`, por lo que el grafo compilado también puede
+envolverse con el adaptador LangChain de LiveKit.
+
+### Adaptador LiveKit + LangGraph
+
+Instala la integración opcional de LiveKit:
+
+```bash
+python scripts/dev.py setup-livekit
+```
+
+Esto instala `livekit-agents[langchain]` y LangGraph. Usa
+`voiceclinic.orchestration.build_livekit_graph(agent)` si quieres el grafo
+compilado, o `voiceclinic.livekit_agent.build_langgraph_llm_adapter()` si quieres
+un `LLMAdapter` de LiveKit listo para pasar a `AgentSession`.
+
+El patrón es:
+
+```python
+from livekit.agents import AgentSession
+
+from voiceclinic.livekit_agent import build_langgraph_llm_adapter
+
+session = AgentSession(
+    llm=build_langgraph_llm_adapter(),
+    # stt=..., tts=..., vad=...
+)
+```
+
+Consulta [LiveKit + LangGraph](LIVEKIT_LANGGRAPH.md) para las notas completas de
+integración bilingüe.
 
 ### Dependencias de voz
 

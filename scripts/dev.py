@@ -19,6 +19,7 @@ def main() -> None:
     subparsers.add_parser("setup")
     subparsers.add_parser("setup-voice")
     subparsers.add_parser("setup-orchestration")
+    subparsers.add_parser("setup-livekit")
     subparsers.add_parser("setup-all")
     subparsers.add_parser("init-db")
     subparsers.add_parser("reset-db")
@@ -43,6 +44,8 @@ def main() -> None:
         setup_voice()
     elif args.command == "setup-orchestration":
         setup_orchestration()
+    elif args.command == "setup-livekit":
+        setup_livekit()
     elif args.command == "setup-all":
         setup_all()
     elif args.command == "init-db":
@@ -90,6 +93,11 @@ def setup_voice() -> None:
 def setup_orchestration() -> None:
     ensure_venv()
     run(venv_python(), "-m", "pip", "install", "-e", ".[dev,orchestration]")
+
+
+def setup_livekit() -> None:
+    ensure_venv()
+    run(venv_python(), "-m", "pip", "install", "-e", ".[dev,orchestration,livekit]")
 
 
 def setup_all() -> None:
