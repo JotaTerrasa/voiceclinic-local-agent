@@ -1,7 +1,9 @@
+PYTHON ?= python3.12
+
 .PHONY: setup setup-voice init-db reset-db api chat audiosocket test lint docker-up docker-down
 
 setup:
-	python3 -m venv .venv
+	$(PYTHON) -m venv .venv
 	.venv/bin/pip install -U pip
 	.venv/bin/pip install -e ".[dev]"
 

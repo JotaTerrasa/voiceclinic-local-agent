@@ -2,58 +2,70 @@
 
 ## English
 
-### Current V0
+### Current version
 
-- Local scheduler and demo data.
-- API chat and web demo.
-- Rule-based extraction with optional Ollama support.
-- Local clinical observer guardrails for emergencies, diagnosis and prescription requests.
-- Local STT with faster-whisper.
-- Local TTS with Piper.
-- Initial Asterisk AudioSocket bridge.
+- Local scheduling domain with demo patients, doctors, slots and appointments.
+- FastAPI backend and browser-based demo.
+- Deterministic intent handling with optional Ollama-based extraction.
+- `qwen3:30b` as the recommended local LLM for a single RTX 4090.
+- Clinical guardrail observer for emergencies, self-harm, diagnosis requests,
+  prescription requests and third-party data.
+- Optional local STT with faster-whisper.
+- Optional local TTS with Piper.
+- Initial Asterisk AudioSocket bridge for local SIP calls.
+- Bilingual documentation in English and Spanish.
 
 ### Portfolio V1
 
-- Call dashboard with transcript, actions and latency metrics.
-- Better VAD and barge-in handling.
-- LiveKit `conversation_item_added` observer integration.
-- Strict JSON tool calling with validation for both agent and observer.
+- Call dashboard with transcript, actions, latency and guardrail events.
+- Better voice activity detection and interruption handling.
+- LiveKit Agents integration using `conversation_item_added` for the observer.
+- Structured tool-calling schema with stricter validation.
 - Post-call summary export.
-- Local recording with consent.
+- Local call recording with explicit consent.
+- Docker profile for GPU-enabled Ollama.
 
-### Simulated Production V2
+### Simulated production V2
 
-- Postgres, migrations and audit trail.
-- Privacy and retention policies.
+- Postgres, migrations and a full audit trail.
+- Stronger patient identity verification.
 - Human handoff queue.
-- Self-hosted LiveKit SIP with a real SIP trunk.
-- Observability: traces, metrics and dashboard.
+- Privacy and data-retention policies.
+- Observability with traces, metrics and dashboards.
+- Self-hosted LiveKit SIP path with a real SIP trunk.
+- Evaluation suite for appointments, guardrails and conversation quality.
 
-## Espanol
+## Español
 
-### V0 Actual
+### Versión actual
 
-- Agenda local y datos demo.
-- Chat por API y demo web.
-- Extraccion por reglas con soporte opcional de Ollama.
-- Observer clinico local para emergencias, diagnostico y peticiones de medicacion.
-- STT local con faster-whisper.
-- TTS local con Piper.
-- Puente Asterisk AudioSocket inicial.
+- Dominio local de agenda con pacientes, doctores, huecos y citas de demostración.
+- Backend FastAPI y demo en navegador.
+- Manejo determinista de intención con extracción opcional mediante Ollama.
+- `qwen3:30b` como LLM local recomendado para una RTX 4090.
+- Observador de guardrails clínicos para emergencias, autolesión, diagnóstico,
+  recetas y datos de terceros.
+- STT local opcional con faster-whisper.
+- TTS local opcional con Piper.
+- Puente inicial de Asterisk AudioSocket para llamadas SIP locales.
+- Documentación bilingüe en inglés y español.
 
-### V1 Portfolio
+### V1 de portfolio
 
-- Panel de llamadas con transcript, acciones y metricas de latencia.
-- Mejor VAD y manejo de interrupciones.
-- Integracion del observer con `conversation_item_added` de LiveKit.
-- Tool calling JSON estricto con validacion para agente y observer.
-- Export de resumen post-llamada.
-- Grabacion local con consentimiento.
+- Panel de llamadas con transcript, acciones, latencia y eventos de guardrails.
+- Mejor detección de actividad de voz y manejo de interrupciones.
+- Integración con LiveKit Agents usando `conversation_item_added` para el observador.
+- Esquema de tool calling estructurado con validación más estricta.
+- Exportación de resumen posterior a la llamada.
+- Grabación local con consentimiento explícito.
+- Perfil Docker para Ollama con GPU.
 
-### V2 Produccion Simulada
+### V2 de producción simulada
 
-- Postgres, migraciones y auditoria.
-- Politicas de privacidad y retencion.
-- Cola de handoff humano.
-- LiveKit SIP self-hosted con trunk SIP real.
-- Observabilidad: traces, metricas y dashboard.
+- Postgres, migraciones y auditoría completa.
+- Verificación de identidad del paciente más robusta.
+- Cola de derivación a humano.
+- Políticas de privacidad y retención de datos.
+- Observabilidad con trazas, métricas y dashboards.
+- Ruta LiveKit SIP autoalojada con un trunk SIP real.
+- Suite de evaluación para citas, guardrails y calidad conversacional.

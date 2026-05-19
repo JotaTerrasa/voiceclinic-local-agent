@@ -1,78 +1,120 @@
-# Guardrails / Guardrails Clinicos
+# Guardrails / Guardrails Clínicos
 
 ## English
 
-This project adapts LiveKit's background observer pattern to a local clinical
-appointment agent.
+VoiceClinic implements a local clinical observer inspired by LiveKit's background
+observer pattern for voice-agent guardrails.
 
-The LiveKit pattern has three steps:
+The key idea is separation of concerns: the appointment agent focuses on the
+conversation and tool execution, while a policy observer reviews each user turn
+and injects safety directives before any scheduling action runs.
 
-1. Listen to committed user turns.
-2. Evaluate policy in a separate observer.
-3. Inject an actionable instruction into the active agent.
+### Pattern
 
-In this repo, `ClinicalPolicyObserver` is independent from LiveKit so it works
-in the FastAPI demo, CLI and future LiveKit sessions. The current API calls it
-directly before the agent runs appointment tools. A future LiveKit integration
-can feed the same observer from `conversation_item_added`.
+```mermaid
+sequenceDiagram
+  participant User
+  participant Agent as ClinicAgent
+  participant Observer as ClinicalPolicyObserver
+  participant Tools as Scheduling tools
 
-### Current Categories
+  User->>Agent: User turn
+  Agent->>Observer: Observe transcript and session
+  Observer-->>Agent: Policy directives
+  alt Blocking directive
+    Agent-->>User: Safety response
+  else Advisory or no directive
+    Agent->>Tools: Execute appointment action
+    Tools-->>Agent: Result
+    Agent-->>User: Final response
+  end
+```
 
-- `medical_emergency`: chest pain, breathing difficulty, stroke/heart-attack
-  language, fainting, seizures or heavy bleeding. Blocks routine booking.
-- `self_harm`: self-harm or suicidal ideation. Blocks routine booking.
-- `diagnosis_request`: asks the agent to diagnose or interpret symptoms. Blocks
-  diagnosis and offers appointment scheduling.
-- `prescription_request`: asks for medication, dosage or prescription handling.
-  Blocks medical instruction and offers appointment scheduling.
-- `third_party_data`: asks about another patient's data. Adds a privacy warning
-  before continuing.
+### Current policies
 
-### Why It Matters
+- `medical_emergency`: detects signals such as chest pain, breathing difficulty,
+  stroke/heart-attack language, fainting, seizures or heavy bleeding. It blocks
+  routine booking and directs the caller to emergency care.
+- `self_harm`: detects self-harm or suicidal ideation. It blocks normal
+  appointment handling and recommends immediate emergency support.
+- `diagnosis_request`: detects requests for diagnosis or clinical interpretation.
+  It blocks diagnosis and offers appointment scheduling instead.
+- `prescription_request`: detects requests for medication, dosage or prescription
+  instructions. It blocks medical advice and offers a clinician appointment.
+- `third_party_data`: detects requests involving another patient's data. It adds
+  a privacy warning before continuing.
 
-Prompt-only safety rules compete with the agent's main job. Separating policy
-observation from appointment execution makes the system easier to test and easier
-to extend. It also lets the voice agent remain focused on low-latency conversation
-while safety policy evolves independently.
+### Why this matters
+
+Prompt-only safety rules are fragile because they compete with the agent's main
+task. A separate observer makes policy behavior explicit, testable and reusable
+across web, API, SIP and future LiveKit channels.
+
+### LiveKit integration path
+
+The current implementation is independent from LiveKit. In a future LiveKit
+Agents version, the same observer can be fed from `conversation_item_added` once
+the user's speech has been committed to the conversation.
 
 Reference: https://livekit.com/blog/observer-pattern-voice-agent-guardrails
 
-## Espanol
+## Español
 
-Este proyecto adapta el background observer pattern de LiveKit a un agente local
-de citas clinicas.
+VoiceClinic implementa un observador clínico local inspirado en el patrón de
+background observer de LiveKit para guardrails de agentes de voz.
 
-El patron de LiveKit tiene tres pasos:
+La idea principal es separar responsabilidades: el agente de citas se concentra
+en la conversación y la ejecución de herramientas, mientras que un observador de
+políticas revisa cada turno del usuario e inyecta directivas de seguridad antes
+de ejecutar cualquier acción de agenda.
 
-1. Escuchar los turnos confirmados del usuario.
-2. Evaluar politicas en un observador separado.
-3. Inyectar una instruccion accionable en el agente activo.
+### Patrón
 
-En este repo, `ClinicalPolicyObserver` es independiente de LiveKit para funcionar
-en la demo FastAPI, CLI y futuras sesiones LiveKit. La API actual lo llama
-directamente antes de que el agente ejecute herramientas de agenda. Una futura
-integracion con LiveKit puede alimentar el mismo observer desde
-`conversation_item_added`.
+```mermaid
+sequenceDiagram
+  participant Usuario
+  participant Agente as ClinicAgent
+  participant Observer as ClinicalPolicyObserver
+  participant Tools as Herramientas de agenda
 
-### Categorias Actuales
+  Usuario->>Agente: Turno de usuario
+  Agente->>Observer: Observa transcript y sesión
+  Observer-->>Agente: Directivas de política
+  alt Directiva bloqueante
+    Agente-->>Usuario: Respuesta de seguridad
+  else Directiva informativa o sin directiva
+    Agente->>Tools: Ejecuta acción de agenda
+    Tools-->>Agente: Resultado
+    Agente-->>Usuario: Respuesta final
+  end
+```
 
-- `medical_emergency`: dolor en el pecho, dificultad respiratoria, lenguaje de
-  ictus/infarto, desmayo, convulsiones o sangrado abundante. Bloquea la reserva
-  ordinaria.
-- `self_harm`: autolesion o ideacion suicida. Bloquea la reserva ordinaria.
-- `diagnosis_request`: pide al agente diagnosticar o interpretar sintomas.
-  Bloquea el diagnostico y ofrece cita.
-- `prescription_request`: pide medicacion, dosis o gestion de receta. Bloquea la
-  instruccion medica y ofrece cita.
-- `third_party_data`: pide datos de otro paciente. Anade una advertencia de
-  privacidad antes de continuar.
+### Políticas actuales
 
-### Por Que Importa
+- `medical_emergency`: detecta señales como dolor torácico, dificultad
+  respiratoria, lenguaje de ictus/infarto, desmayos, convulsiones o sangrado
+  abundante. Bloquea la reserva ordinaria y deriva a atención urgente.
+- `self_harm`: detecta autolesión o ideación suicida. Bloquea la gestión normal
+  de citas y recomienda ayuda urgente.
+- `diagnosis_request`: detecta peticiones de diagnóstico o interpretación
+  clínica. Bloquea el diagnóstico y ofrece reservar una cita.
+- `prescription_request`: detecta peticiones de medicación, dosis o receta.
+  Bloquea el consejo médico y ofrece cita con un profesional.
+- `third_party_data`: detecta peticiones relacionadas con datos de otro paciente.
+  Añade una advertencia de privacidad antes de continuar.
 
-Las reglas de seguridad solo en prompt compiten con el trabajo principal del
-agente. Separar observacion de politicas y ejecucion de citas hace que el sistema
-sea mas facil de probar y extender. Tambien permite que el agente de voz se
-centre en conversacion de baja latencia mientras las politicas evolucionan de
-forma independiente.
+### Por qué importa
+
+Las reglas de seguridad escritas solo en el prompt son frágiles porque compiten
+con el objetivo principal del agente. Un observador separado hace que las
+políticas sean explícitas, testeables y reutilizables en web, API, SIP y futuros
+canales con LiveKit.
+
+### Camino de integración con LiveKit
+
+La implementación actual no depende de LiveKit. En una versión futura con
+LiveKit Agents, el mismo observador puede alimentarse desde
+`conversation_item_added` cuando el turno de voz del usuario ya esté confirmado
+en la conversación.
 
 Referencia: https://livekit.com/blog/observer-pattern-voice-agent-guardrails

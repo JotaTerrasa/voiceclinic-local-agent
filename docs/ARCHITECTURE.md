@@ -1,87 +1,269 @@
 # Architecture / Arquitectura
 
-```mermaid
-flowchart LR
-  Caller["Softphone SIP"] --> Asterisk["Local Asterisk"]
-  Asterisk --> AudioSocket["AudioSocket bridge"]
-  Browser["Web demo"] --> API["FastAPI"]
-  AudioSocket --> STT["Local faster-whisper"]
-  Browser --> STT
-  STT --> Agent["ClinicAgent"]
-  API --> Agent
-  Agent --> Observer["ClinicalPolicyObserver"]
-  Observer --> Agent
-  Agent --> Scheduler["SQLite scheduler"]
-  Agent --> Ollama["Local Ollama LLM"]
-  Agent --> TTS["Local Piper"]
-  TTS --> AudioSocket
-  TTS --> Browser
-```
-
 ## English
 
-### Layers
+VoiceClinic is split into small, replaceable layers. The scheduling domain does
+not know whether a request came from the web demo, a REST call, a SIP call or a
+future LiveKit session. That keeps the core behavior testable and makes the voice
+stack easier to evolve.
 
-1. `voiceclinic.scheduling`: transactional scheduling rules.
-2. `voiceclinic.agent`: intent interpretation, tools and final response.
-3. `voiceclinic.guardrails`: background-style clinical policy observer.
-4. `voiceclinic.api`: REST API, web demo and voice-turn endpoint.
-5. `voiceclinic.telephony.audiosocket_server`: local SIP bridge.
-6. `voiceclinic.livekit_agent`: extension point for LiveKit Agents.
+### System diagram
 
-### Decisions
+```mermaid
+flowchart LR
+  Web["Web demo"] --> API["FastAPI"]
+  REST["REST client"] --> API
+  Phone["SIP softphone"] --> Asterisk["Asterisk"]
+  Asterisk --> AudioSocket["AudioSocket bridge"]
 
-- SQLite keeps the portfolio project easy to run. Moving to Postgres would not
-  change the agent contract.
-- The agent does not depend on an LLM for critical operations: deterministic
-  rules keep the offline demo and tests stable.
-- Clinical guardrails are separated from appointment handling through a
-  `ClinicalPolicyObserver`. This follows the LiveKit observer-pattern idea:
-  listen to user turns, evaluate policy, then inject an actionable directive.
-- Ollama is used as an optional natural-language interpretation layer.
-- Asterisk/AudioSocket enables local SIP calls. LiveKit remains the next step
-  for a self-hosted WebRTC/SIP architecture.
+  API --> Agent["ClinicAgent"]
+  AudioSocket --> STT["faster-whisper"]
+  STT --> Agent
 
-### Real Risks
+  Agent --> Observer["ClinicalPolicyObserver"]
+  Observer --> Agent
+  Agent --> Scheduler["Scheduler"]
+  Scheduler --> DB[("SQLite")]
+  Agent --> Ollama["Ollama / qwen3:30b"]
+  Agent --> TTS["Piper"]
 
-- Latency: local STT + LLM + TTS can feel slow on CPU-only machines.
-- VAD: the AudioSocket silence detector is intentionally simple.
-- Clinical safety: there is no real PHI, recording consent flow or full audit
-  trail in this demo. Guardrails reduce obvious risk, but they are not a medical
-  safety certification.
-- PSTN telephony: public-network calls require an external SIP trunk, which is
-  no longer fully local.
+  TTS --> API
+  TTS --> AudioSocket
+```
 
-## Espanol
+### Runtime flow
 
-### Capas
+```mermaid
+sequenceDiagram
+  participant Patient
+  participant Channel as Web/API/SIP
+  participant Agent as ClinicAgent
+  participant Guardrails as ClinicalPolicyObserver
+  participant Scheduler
+  participant DB as SQLite
 
-1. `voiceclinic.scheduling`: reglas transaccionales de agenda.
-2. `voiceclinic.agent`: interpretacion de intencion, herramientas y respuesta final.
-3. `voiceclinic.guardrails`: observador clinico de politicas.
-4. `voiceclinic.api`: API REST, demo web y endpoint de turno de voz.
-5. `voiceclinic.telephony.audiosocket_server`: puente SIP local.
-6. `voiceclinic.livekit_agent`: punto de extension para LiveKit Agents.
+  Patient->>Channel: Request appointment or ask a question
+  Channel->>Agent: User turn with session_id
+  Agent->>Guardrails: Observe transcript
+  Guardrails-->>Agent: Policy directives
+  alt Critical guardrail
+    Agent-->>Channel: Safety response, no scheduling action
+  else Normal scheduling flow
+    Agent->>Scheduler: Book, reschedule, cancel or list
+    Scheduler->>DB: Transactional update
+    DB-->>Scheduler: Appointment state
+    Scheduler-->>Agent: Result
+    Agent-->>Channel: Final response
+  end
+  Channel-->>Patient: Text or synthesized speech
+```
 
-### Decisiones
+### Components
 
-- SQLite mantiene el proyecto facil de ejecutar en portfolio. Cambiar a Postgres
-  no afectaria al contrato del agente.
-- El agente no depende de un LLM para operaciones criticas: las reglas
-  deterministas mantienen estable la demo offline y los tests.
-- Los guardrails clinicos estan separados de la gestion de citas mediante un
-  `ClinicalPolicyObserver`. Sigue la idea del observer pattern de LiveKit:
-  escuchar turnos de usuario, evaluar politica e inyectar una directiva accionable.
-- Ollama se usa como capa opcional de interpretacion de lenguaje natural.
-- Asterisk/AudioSocket permite llamadas SIP locales. LiveKit queda como el
-  siguiente paso para una arquitectura WebRTC/SIP self-hosted.
+- `voiceclinic.api`: FastAPI app, web demo mount, chat endpoint, voice-turn endpoint.
+- `voiceclinic.agent`: conversation logic, intent extraction and tool execution.
+- `voiceclinic.guardrails`: independent clinical policy observer.
+- `voiceclinic.scheduling`: transactional appointment operations.
+- `voiceclinic.db`: SQLite schema and demo seed data.
+- `voiceclinic.voice`: local STT/TTS adapters.
+- `voiceclinic.telephony`: Asterisk AudioSocket bridge.
+- `voiceclinic.livekit_agent`: placeholder for future LiveKit Agents integration.
 
-### Riesgos Reales
+### Data model
 
-- Latencia: STT + LLM + TTS local puede sentirse lento en maquinas solo con CPU.
-- VAD: el detector de silencio del puente AudioSocket es deliberadamente simple.
-- Seguridad clinica: esta demo no incluye PHI real, flujo de consentimiento de
-  grabacion ni auditoria completa. Los guardrails reducen riesgos obvios, pero
-  no son una certificacion de seguridad medica.
-- Telefonia PSTN: las llamadas a red publica requieren un trunk SIP externo, por
-  lo que ya no serian 100% locales.
+```mermaid
+erDiagram
+  PATIENTS ||--o{ APPOINTMENTS : has
+  DOCTORS ||--o{ SLOTS : owns
+  DOCTORS ||--o{ APPOINTMENTS : attends
+  SLOTS ||--o| APPOINTMENTS : becomes
+
+  PATIENTS {
+    int id
+    string full_name
+    string phone
+    string birth_date
+  }
+
+  DOCTORS {
+    int id
+    string full_name
+    string specialty
+  }
+
+  SLOTS {
+    int id
+    int doctor_id
+    string starts_at
+    string ends_at
+    string status
+  }
+
+  APPOINTMENTS {
+    int id
+    int patient_id
+    int doctor_id
+    string starts_at
+    string ends_at
+    string reason
+    string status
+  }
+```
+
+### Design decisions
+
+- **Local-first by default.** The project runs with local storage, local LLM
+  inference and optional local speech components.
+- **Rules before LLM for critical behavior.** Appointment operations are
+  deterministic and covered by tests. Ollama improves language understanding but
+  does not own the transaction.
+- **Guardrails are a separate observer.** The clinical observer can block or
+  annotate a turn before scheduling tools run.
+- **SQLite for portfolio speed.** SQLite keeps the demo easy to run; the
+  scheduler boundary makes a future Postgres migration straightforward.
+- **Telephony is optional.** The API and web demo work without Asterisk, Piper or
+  faster-whisper.
+
+### Production gaps
+
+- Identity verification is intentionally simplified.
+- There is no real patient data, consent workflow or audit trail.
+- Clinical guardrails are useful for a demo, but they are not a medical safety
+  certification.
+- Public telephone calls require a SIP trunk, which is not fully local.
+- Low-latency voice in production would need stronger VAD, interruption handling
+  and observability.
+
+## Español
+
+VoiceClinic está dividido en capas pequeñas y reemplazables. El dominio de
+agenda no sabe si la petición llega desde la demo web, una llamada REST, una
+llamada SIP o una futura sesión de LiveKit. Esto mantiene el núcleo fácil de
+probar y permite evolucionar el stack de voz sin reescribir la lógica clínica.
+
+### Diagrama del sistema
+
+```mermaid
+flowchart LR
+  Web["Demo web"] --> API["FastAPI"]
+  REST["Cliente REST"] --> API
+  Phone["Softphone SIP"] --> Asterisk["Asterisk"]
+  Asterisk --> AudioSocket["Puente AudioSocket"]
+
+  API --> Agent["ClinicAgent"]
+  AudioSocket --> STT["faster-whisper"]
+  STT --> Agent
+
+  Agent --> Observer["ClinicalPolicyObserver"]
+  Observer --> Agent
+  Agent --> Scheduler["Scheduler"]
+  Scheduler --> DB[("SQLite")]
+  Agent --> Ollama["Ollama / qwen3:30b"]
+  Agent --> TTS["Piper"]
+
+  TTS --> API
+  TTS --> AudioSocket
+```
+
+### Flujo de ejecución
+
+```mermaid
+sequenceDiagram
+  participant Paciente
+  participant Canal as Web/API/SIP
+  participant Agente as ClinicAgent
+  participant Guardrails as ClinicalPolicyObserver
+  participant Agenda as Scheduler
+  participant DB as SQLite
+
+  Paciente->>Canal: Solicita una cita o hace una consulta
+  Canal->>Agente: Turno de usuario con session_id
+  Agente->>Guardrails: Observa el transcript
+  Guardrails-->>Agente: Directivas de política
+  alt Guardrail crítico
+    Agente-->>Canal: Respuesta de seguridad, sin acción de agenda
+  else Flujo normal de agenda
+    Agente->>Agenda: Reserva, cambia, cancela o consulta
+    Agenda->>DB: Actualización transaccional
+    DB-->>Agenda: Estado de la cita
+    Agenda-->>Agente: Resultado
+    Agente-->>Canal: Respuesta final
+  end
+  Canal-->>Paciente: Texto o voz sintetizada
+```
+
+### Componentes
+
+- `voiceclinic.api`: aplicación FastAPI, demo web, endpoint de chat y endpoint de voz.
+- `voiceclinic.agent`: lógica conversacional, extracción de intención y ejecución de herramientas.
+- `voiceclinic.guardrails`: observador clínico de políticas.
+- `voiceclinic.scheduling`: operaciones transaccionales de agenda.
+- `voiceclinic.db`: esquema SQLite y datos de demostración.
+- `voiceclinic.voice`: adaptadores locales de STT/TTS.
+- `voiceclinic.telephony`: puente AudioSocket para Asterisk.
+- `voiceclinic.livekit_agent`: punto de extensión para LiveKit Agents.
+
+### Modelo de datos
+
+```mermaid
+erDiagram
+  PATIENTS ||--o{ APPOINTMENTS : has
+  DOCTORS ||--o{ SLOTS : owns
+  DOCTORS ||--o{ APPOINTMENTS : attends
+  SLOTS ||--o| APPOINTMENTS : becomes
+
+  PATIENTS {
+    int id
+    string full_name
+    string phone
+    string birth_date
+  }
+
+  DOCTORS {
+    int id
+    string full_name
+    string specialty
+  }
+
+  SLOTS {
+    int id
+    int doctor_id
+    string starts_at
+    string ends_at
+    string status
+  }
+
+  APPOINTMENTS {
+    int id
+    int patient_id
+    int doctor_id
+    string starts_at
+    string ends_at
+    string reason
+    string status
+  }
+```
+
+### Decisiones técnicas
+
+- **Local-first por defecto.** El proyecto usa almacenamiento local, inferencia
+  local de LLM y componentes de voz locales opcionales.
+- **Reglas antes que LLM para comportamiento crítico.** Las operaciones de agenda
+  son deterministas y están cubiertas por tests. Ollama mejora la comprensión
+  del lenguaje, pero no controla la transacción.
+- **Guardrails como observador separado.** El observador clínico puede bloquear o
+  anotar un turno antes de ejecutar herramientas de agenda.
+- **SQLite para velocidad de portfolio.** SQLite facilita ejecutar la demo; la
+  frontera del scheduler permite migrar a Postgres más adelante.
+- **Telefonía opcional.** La API y la demo web funcionan sin Asterisk, Piper ni
+  faster-whisper.
+
+### Brechas antes de producción
+
+- La verificación de identidad está simplificada.
+- No hay datos reales de pacientes, flujo de consentimiento ni auditoría completa.
+- Los guardrails clínicos son útiles para la demo, pero no certifican seguridad médica.
+- Las llamadas a red pública requieren un trunk SIP externo, por lo que no serían
+  completamente locales.
+- Voz de baja latencia en producción exigiría mejor VAD, manejo de interrupciones
+  y observabilidad.
