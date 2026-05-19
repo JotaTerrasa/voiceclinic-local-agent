@@ -1,38 +1,39 @@
-PYTHON ?= python3.12
+PYTHON ?= python3
 
-.PHONY: setup setup-voice init-db reset-db api chat audiosocket test lint docker-up docker-down
+.PHONY: copy-env setup setup-voice init-db reset-db api chat audiosocket test lint docker-up docker-down
+
+copy-env:
+	$(PYTHON) scripts/dev.py copy-env
 
 setup:
-	$(PYTHON) -m venv .venv
-	.venv/bin/pip install -U pip
-	.venv/bin/pip install -e ".[dev]"
+	$(PYTHON) scripts/dev.py setup
 
 setup-voice:
-	.venv/bin/pip install -e ".[dev,voice]"
+	$(PYTHON) scripts/dev.py setup-voice
 
 init-db:
-	.venv/bin/voiceclinic init-db
+	$(PYTHON) scripts/dev.py init-db
 
 reset-db:
-	.venv/bin/voiceclinic reset-db
+	$(PYTHON) scripts/dev.py reset-db
 
 api:
-	.venv/bin/voiceclinic api --host 127.0.0.1 --port 8000
+	$(PYTHON) scripts/dev.py api --host 127.0.0.1 --port 8000
 
 chat:
-	.venv/bin/voiceclinic chat
+	$(PYTHON) scripts/dev.py chat
 
 audiosocket:
-	.venv/bin/voiceclinic audiosocket
+	$(PYTHON) scripts/dev.py audiosocket
 
 test:
-	.venv/bin/pytest
+	$(PYTHON) scripts/dev.py test
 
 lint:
-	.venv/bin/ruff check src tests
+	$(PYTHON) scripts/dev.py lint
 
 docker-up:
-	docker compose up --build
+	$(PYTHON) scripts/dev.py docker-up
 
 docker-down:
-	docker compose down
+	$(PYTHON) scripts/dev.py docker-down

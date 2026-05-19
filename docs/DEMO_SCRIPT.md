@@ -9,10 +9,10 @@ workflows while applying clinical guardrails.
 ### Preparation
 
 ```bash
-cp .env.example .env
-make setup
-make reset-db
-make api
+python scripts/dev.py copy-env
+python scripts/dev.py setup
+python scripts/dev.py reset-db
+python scripts/dev.py api
 ```
 
 Open:
@@ -125,10 +125,10 @@ citas y aplica guardrails clínicos.
 ### Preparación
 
 ```bash
-cp .env.example .env
-make setup
-make reset-db
-make api
+python scripts/dev.py copy-env
+python scripts/dev.py setup
+python scripts/dev.py reset-db
+python scripts/dev.py api
 ```
 
 Abre:

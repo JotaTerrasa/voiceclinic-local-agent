@@ -55,11 +55,14 @@ Requirements:
 - Ollama, if you want LLM-based intent extraction.
 - Docker, only if you want the containerized stack.
 
+If your system uses `python3` or `py -3.12` instead of `python`, use that command
+in the examples below.
+
 ```bash
-cp .env.example .env
-make setup
-make reset-db
-make api
+python scripts/dev.py copy-env
+python scripts/dev.py setup
+python scripts/dev.py reset-db
+python scripts/dev.py api
 ```
 
 Open:
@@ -71,7 +74,7 @@ http://127.0.0.1:8000/demo/
 Text-only mode:
 
 ```bash
-make chat
+python scripts/dev.py chat
 ```
 
 Recommended Ollama model:
@@ -83,6 +86,7 @@ ollama pull qwen3:30b
 ### Documentation
 
 - [Setup](docs/SETUP.md): local, voice, Docker and telephony setup.
+- [Platform Notes](docs/PLATFORM_NOTES.md): Windows, macOS, Linux and CUDA notes.
 - [Architecture](docs/ARCHITECTURE.md): components, flows and design decisions.
 - [API](docs/API.md): REST endpoints and example requests.
 - [Guardrails](docs/GUARDRAILS.md): clinical observer pattern and policy categories.
@@ -92,8 +96,8 @@ ollama pull qwen3:30b
 ### Validation
 
 ```bash
-make test
-make lint
+python scripts/dev.py test
+python scripts/dev.py lint
 ```
 
 Current test coverage focuses on scheduling transactions, agent behavior and
@@ -155,11 +159,14 @@ Requisitos:
 - Ollama, si quieres extracción de intención basada en LLM.
 - Docker, solo si quieres levantar el stack en contenedores.
 
+Si tu sistema usa `python3` o `py -3.12` en lugar de `python`, usa ese comando en
+los ejemplos siguientes.
+
 ```bash
-cp .env.example .env
-make setup
-make reset-db
-make api
+python scripts/dev.py copy-env
+python scripts/dev.py setup
+python scripts/dev.py reset-db
+python scripts/dev.py api
 ```
 
 Abre:
@@ -171,7 +178,7 @@ http://127.0.0.1:8000/demo/
 Modo solo texto:
 
 ```bash
-make chat
+python scripts/dev.py chat
 ```
 
 Modelo recomendado para Ollama:
@@ -183,6 +190,7 @@ ollama pull qwen3:30b
 ### Documentación
 
 - [Instalación](docs/SETUP.md): configuración local, voz, Docker y telefonía.
+- [Notas de plataforma](docs/PLATFORM_NOTES.md): Windows, macOS, Linux y CUDA.
 - [Arquitectura](docs/ARCHITECTURE.md): componentes, flujos y decisiones técnicas.
 - [API](docs/API.md): endpoints REST y ejemplos de petición.
 - [Guardrails](docs/GUARDRAILS.md): patrón de observador clínico y categorías de política.
@@ -192,8 +200,8 @@ ollama pull qwen3:30b
 ### Validación
 
 ```bash
-make test
-make lint
+python scripts/dev.py test
+python scripts/dev.py lint
 ```
 
 La cobertura actual se centra en transacciones de agenda, comportamiento del
