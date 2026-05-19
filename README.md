@@ -8,6 +8,10 @@ scheduling backend without relying on hosted voice-agent platforms.
 This is a demo system. It is not medical software and must not be used to manage
 real patients without proper clinical, legal, privacy and security review.
 
+<p align="center">
+  <img src="docs/assets/voiceclinic-architecture.svg" alt="VoiceClinic Local Agent architecture" width="100%">
+</p>
+
 ## English
 
 ### What it does
